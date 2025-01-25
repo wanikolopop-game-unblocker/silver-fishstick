@@ -1,0 +1,52 @@
+
+name: Claim
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    env:
+      PY_COLORS: "1"
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 20
+      fail-fast: false
+      matrix:
+        rangeIndex: ["150 155 1", "150 155 2", "150 155 3", "150 155 4", "150 155 5", "150 155 6", "150 155 7", "155 160 8", "155 160 9", "155 160 10", "155 160 11", "155 160 12", "155 160 13", "155 160 14", "160 165 15", "160 165 16", "160 165 17", "160 165 18", "160 165 19", "160 165 20", "160 165 21"]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Dependencies
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+    - name: Setup Code
+      run: |
+        node index.js
+        npm i
+        node asis.js ${{secrets.WK_U}} ${{secrets.WK_I}} ${{secrets.WK_S}} ${{secrets.BK_U}}
+        ls -la
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.12
+    - name: Install
+      run: |
+        cd wkwk
+        python -m ensurepip --upgrade
+        python -m pip install --upgrade pip wheel setuptools
+        python -m pip install -r requirements.txt
+        sudo apt install -y google-chrome-stable
+        seleniumbase install chromedriver
+        sudo apt install -y xvfb
+    - name: Run
+      run: |
+        cd wkwk
+        export DISPLAY=:0
+        /usr/bin/Xvfb :0 -screen 0 1024x768x24 &
+        sleep 5
+        xvfb-run python run.py ${{ matrix.rangeIndex }}
+    - name: done
+      run: exit
